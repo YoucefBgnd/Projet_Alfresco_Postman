@@ -213,7 +213,7 @@ Distribué sous licence **MIT**. Voir le fichier [LICENSE](LICENSE).
 
 <div align="center">
 
-**Auteur : [Votre Nom](https://github.com/<votre-utilisateur>)** · [LinkedIn](https://www.linkedin.com/in/<votre-profil>)
+**Auteur : [Youssef BOUOGANDOU](https://github.com/<votre-utilisateur>)** · [LinkedIn]([https://www.linkedin.com/in/<votre-profil>](https://www.linkedin.com/in/bouogandou-youssef))
 
 ⭐ Si ce projet vous est utile, n'hésitez pas à lui laisser une étoile.
 
