@@ -1,0 +1,25 @@
+# Environnements Postman locaux (peuvent contenir des identifiants)
+*.postman_environment.local.json
+postman/*.local.json
+.env
+.env.*
+!.env.example
+
+# Rapports Newman
+newman/
+*-report.json
+*-report.html
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Systèmes d'exploitation
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Éditeurs / IDE
+.idea/
+.vscode/
+*.swp

@@ -1,0 +1,215 @@
+{
+  "info": {
+    "_postman_id": "372f0fd6-befb-47ca-ab15-b91067f183a5",
+    "name": "ALFRESCO - Favorites",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Tests d'API REST Alfresco (API Core v1) sur les favoris d'un utilisateur : création, liste, lecture et suppression. Exécuter les requêtes dans l'ordre 00 à 04 avec l'environnement « ALFRESCO - Local » sélectionné. Voir le README du dépôt."
+  },
+  "item": [
+    {
+      "name": "00 - Setup : Get my home folder",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 200\", () => pm.response.to.have.status(200));\n\nconst json = pm.response.json();\npm.expect(json.entry).to.have.property(\"id\");\n\npm.environment.set(\"nodeId\", json.entry.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/nodes/-my-",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "nodes",
+            "-my-"
+          ]
+        },
+        "description": "Récupère le dossier personnel de l'utilisateur (/nodes/-my-) et stocke son id dans nodeId."
+      },
+      "response": []
+    },
+    {
+      "name": "01 - Create a favorite",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (!pm.environment.get(\"nodeId\")) {\n    throw new Error(\"nodeId est vide : exécutez d'abord 00 - Setup\");\n}"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 201 Created\", () => pm.response.to.have.status(201));\npm.test(\"Temps de réponse < 2000 ms\", () => pm.expect(pm.response.responseTime).to.be.below(2000));\n\nconst json = pm.response.json();\n\npm.test(\"Structure de la réponse\", () => {\n    pm.expect(json).to.have.property(\"entry\");\n    pm.expect(json.entry).to.have.property(\"targetGuid\");\n    pm.expect(json.entry).to.have.property(\"createdAt\");\n});\n\npm.test(\"targetGuid = nodeId envoyé\", () => {\n    pm.expect(json.entry.targetGuid).to.eql(pm.environment.get(\"nodeId\"));\n});\n\npm.environment.set(\"favoriteId\", json.entry.targetGuid);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"target\": {\n    \"folder\": {\n      \"guid\": \"{{nodeId}}\"\n    }\n  }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/people/{{personId}}/favorites",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "people",
+            "{{personId}}",
+            "favorites"
+          ]
+        },
+        "description": "Ajoute le dossier personnel aux favoris de l'utilisateur. Stocke l'identifiant du favori dans favoriteId."
+      },
+      "response": []
+    },
+    {
+      "name": "02 - List favorites",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 200\", () => pm.response.to.have.status(200));\n\nconst json = pm.response.json();\n\npm.test(\"Structure liste\", () => {\n    pm.expect(json).to.have.property(\"list\");\n    pm.expect(json.list).to.have.property(\"entries\").that.is.an(\"array\");\n    pm.expect(json.list).to.have.property(\"pagination\");\n});\n\npm.test(\"Le favori créé est dans la liste\", () => {\n    const ids = json.list.entries.map(e => e.entry.targetGuid);\n    pm.expect(ids).to.include(pm.environment.get(\"favoriteId\"));\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/people/{{personId}}/favorites?maxItems=100",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "people",
+            "{{personId}}",
+            "favorites"
+          ],
+          "query": [
+            {
+              "key": "maxItems",
+              "value": "100"
+            }
+          ]
+        },
+        "description": "Liste les favoris de l'utilisateur et vérifie que le favori créé en 01 est présent."
+      },
+      "response": []
+    },
+    {
+      "name": "03 - Get a favorite",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 200\", () => pm.response.to.have.status(200));\n\nconst json = pm.response.json();\npm.test(\"Bon favori retourné\", () => {\n    pm.expect(json.entry.targetGuid).to.eql(pm.environment.get(\"favoriteId\"));\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/people/{{personId}}/favorites/{{favoriteId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "people",
+            "{{personId}}",
+            "favorites",
+            "{{favoriteId}}"
+          ]
+        },
+        "description": "Lit le favori créé en 01 à partir de favoriteId."
+      },
+      "response": []
+    },
+    {
+      "name": "04 - Delete a favorite",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 204 No Content\", () => pm.response.to.have.status(204));\npm.test(\"Body vide\", () => pm.expect(pm.response.text()).to.be.empty);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/people/{{personId}}/favorites/{{favoriteId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "people",
+            "{{personId}}",
+            "favorites",
+            "{{favoriteId}}"
+          ]
+        },
+        "description": "Supprime le favori créé en 01 (nettoyage). Réponse attendue : 204 sans corps."
+      },
+      "response": []
+    }
+  ],
+  "auth": {
+    "type": "basic",
+    "basic": [
+      {
+        "key": "username",
+        "value": "{{username}}",
+        "type": "string"
+      },
+      {
+        "key": "password",
+        "value": "{{password}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080/alfresco/api/-default-/public/alfresco/versions/1"
+    },
+    {
+      "key": "personId",
+      "value": "-me-"
+    }
+  ]
+}
